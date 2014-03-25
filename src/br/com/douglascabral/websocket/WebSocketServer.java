@@ -12,6 +12,9 @@
 package br.com.douglascabral.websocket;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
@@ -22,30 +25,57 @@ import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 
 @WebSocket 
 public class WebSocketServer {
+
+	private static List<Session> sessions = Collections.synchronizedList(new ArrayList<Session>());
+	
+	Session session = null;
 	
 	@OnWebSocketClose
 	public void onClose(int statusCode, String reason) {
-		System.out.println("Close: statusCode=" + statusCode + ", reason=" + reason);
+		synchronized (sessions) {
+			sessions.remove( this.session );
+		}
+		
+		System.out.println("Existem " + sessions.size() + " sessões ativas" );
+		
 	}
+	
 	
 	@OnWebSocketConnect
 	public void onConnect(Session session) {
-		System.out.println("Connect: " + session.getRemoteAddress().getAddress());
+		
+		sessions.add(session);
+		
+		this.session = session;
+		
+		System.out.println("Connect: " + session.getRemoteAddress().getAddress() + " / " + session.getLocalAddress().getAddress());
+		System.out.println("Existem " + sessions.size() + " sessões ativas" );
+		
         try {
-            session.getRemote().sendString("Hello Webbrowser");
+            session.getRemote().sendString("Conectado!");
         } catch (IOException e) {
             e.printStackTrace();
         }
 	}
 	
+	
 	@OnWebSocketError
-	public void onError(Throwable t) {
-		System.out.println("Error: " + t.getMessage());
-	}
+	public void onError(Throwable t) {}
+	
 	
 	@OnWebSocketMessage 
-	public void onMessage(String message) {
-		System.out.println("Message: " + message);
+	public void onMessage(Session session, String message) {
+		
+		int hash = session.hashCode();
+		
+		try {
+			for (Session s : this.sessions) {
+				s.getRemote().sendString(hash + ": " + message);
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 }

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSockets Client</title>
+    <meta charset="utf-8">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+    <script>
+        $(function(){
+            
+            $('#frm').submit(false);
+            
+            CONNECTING = 0;
+            OPEN = 1;
+            CLOSED = 2;
+            
+            var socket = new WebSocket("ws://172.17.62.208:8080/");
+            
+            socket.onopen = function(){};
+            
+            socket.onmessage = function(msg){
+                var div = $('<div>');
+                div.text(msg.data);
+                $('#result').append(div);
+                $('#txt').val('');
+            };
+            
+            socket.onclose = function() {
+                
+            };
+            
+            $('#btn').click(function(){
+                if ( socket.readyState == OPEN ) {
+                    var txt = $('#txt').val();
+                    socket.send( txt );
+                } else {
+                    alert("Servidor desconectado!");
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <div id="wrapper">
+        <form id="frm" action="" method="post">
+            <div>
+                <label>Texto:</label><br>
+                <input type="text" name="txt" id="txt" value="">
+            </div>
+            <div>
+                <input type="submit" id="btn" value="Enviar">
+            </div>
+        </form>
+    </div>
+    <div id="result">
+        
+    </div>
+</body>
+</html>​
